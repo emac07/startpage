@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Start</title>
+  <style>
+    :root{
+      --nord0:#2e3440; --nord1:#3b4252; --nord2:#434c5e; --nord3:#4c566a;
+      --nord4:#d8dee9; --nord6:#eceff4; --nord8:#88c0d0; --nord10:#5e81ac;
+      --bg:var(--nord0); --fg:var(--nord6); --muted:var(--nord3);
+      --tick: var(--nord3); --hand: var(--nord6); --second: var(--nord8);
+    }
+
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      display:grid; place-items:center;
+    }
+    main{ width:min(640px,92vw); display:grid; gap:20px; justify-items:center }
+
+    form{ width:100% }
+    input[type="search"]{
+      width:100%; height:56px; padding:0 16px;
+      border:1px solid var(--nord2); border-radius:12px;
+      background:var(--nord1); color:inherit; font-size:18px; outline:none;
+    }
+    input::placeholder{ color:transparent }
+
+    .clock{ width:160px; aspect-ratio:1; }
+    .dial{ fill:var(--nord1); stroke:var(--nord2); stroke-width:1.5 }
+    .tick{ stroke:var(--tick); stroke-width:1 }
+    .hand{ stroke:var(--hand); stroke-linecap:round }
+    .hand.hour{ stroke-width:2.8 }
+    .hand.min{ stroke-width:2.2 }
+    .hand.sec{ stroke:var(--second); stroke-width:1.5 }
+    .pin{ fill:var(--hand) }
+    .tick.hour{ stroke-width:1.6 }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="clock" aria-label="Analog clock">
+      <svg viewBox="0 0 100 100" role="img">
+        <!-- dial -->
+        <circle class="dial" cx="50" cy="50" r="48" />
+        <!-- ticks -->
+        <g id="ticks"></g>
+        <!-- hands -->
+        <line id="h" class="hand hour" x1="50" y1="50" x2="50" y2="32" />
+        <line id="m" class="hand min"  x1="50" y1="50" x2="50" y2="20" />
+        <line id="s" class="hand sec"  x1="50" y1="50" x2="50" y2="16" />
+        <circle class="pin" cx="50" cy="50" r="1.6" />
+      </svg>
+    </div>
+
+    <form id="f" autocomplete="off">
+      <input id="q" type="search" placeholder="" aria-label="Search" />
+    </form>
+  </main>
+  <script>
+    const $ = (s) => document.querySelector(s);
+
+    addEventListener('load', () => $('#q').focus());
+    addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== $('#q')) { e.preventDefault(); $('#q').focus(); } });
+
+    $('#f').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = $('#q').value.trim();
+      if (!v) { $('#q').focus(); return; }
+      location.href = 'https://www.google.com/search?q=' + encodeURIComponent(v);
+    });
+
+    const h = $('#h'), m = $('#m'), s = $('#s');
+    const ticks = document.querySelector('#ticks');
+    for (let i = 0; i < 60; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      const long = i % 5 === 0;
+      line.setAttribute('x1','50');
+      line.setAttribute('y1', long ? '6' : '10');
+      line.setAttribute('x2','50');
+      line.setAttribute('y2', long ? '16' : '14');
+      line.setAttribute('class','tick' + (long ? ' hour' : ''));
+      line.setAttribute('transform', `rotate(${i*6} 50 50)`);
+      ticks.appendChild(line);
+    }
+
+    function updateClock(){
+      const d = new Date();
+      const ms = d.getMilliseconds();
+      const sec = d.getSeconds() + ms/1000;
+      const min = d.getMinutes() + sec/60;
+      const hr  = (d.getHours()%12) + min/60;
+      h.setAttribute('transform', `rotate(${hr*30} 50 50)`);
+      m.setAttribute('transform', `rotate(${min*6} 50 50)`);
+      s.setAttribute('transform', `rotate(${sec*6} 50 50)`);
+      requestAnimationFrame(updateClock);
+    }
+    updateClock();
+  </script>
+</body>
+</html>
